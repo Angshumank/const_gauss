@@ -8,7 +8,7 @@
 #include"fips202.c"
 #include "cpucycles.c"
 
-unsigned long long int hist[84];
+uint64_t hist[84];
 
 //-------shake------
 void initRandom(uint8_t *x, uint32_t len){
@@ -19,31 +19,16 @@ void initRandom(uint8_t *x, uint32_t len){
 
 int main(){
 
-	long int i,j,k;
-	unsigned long long int bit[97];// to hold the bits
-        unsigned long long int sample[64];
-	volatile unsigned long long int out[7];
+	int64_t i,j,k;
+	uint64_t bit[97];// to hold the bits
+        uint64_t sample[64];
+	volatile uint64_t out[7];
 	//int segment[10];//to keep track if the code enters into some segments
 
 	
-	volatile unsigned long long int clock1, clock2,clock3;
-	clock1=0;clock2=0;clock3=0;
+	volatile uint64_t clock1, clock2,clock3,clock4, clock11;
+	clock1=0;clock2=0;clock3=0;clock4=0;clock11=0;
 	
-/*
-	//-----sha--------------
-	time_t t;
-	srand((unsigned) time(&t));
-
-	long long int data_length=16;
-	unsigned char current_seed1[data_length];
-	unsigned char* hash = (unsigned char*) ((void*) bit);
-	fp = fopen("/dev/urandom", "r");
-	size_t r = fread(current_seed1,sizeof(unsigned char),data_length,fp);
-	SHA512_CTX sha512;
-	SHA512_Init(&sha512);
-	//-----sha ends--------------
-*/
-
 	//-------------------shake--------------------
 
 	uint8_t seed[32];
@@ -61,13 +46,11 @@ int main(){
 
 	//-------------------shake ends---------------
 
-	unsigned long long int disable_update,control;
+	uint64_t disable_update,control;
 	
 	for(i=0;i<84;i++)
 		hist[i]=0;
 
-	/*for(i=0;i<10;i++)
-		segment[i]=0;*/
 
 	clock3=0;
 	int repeat=1000000;
@@ -78,21 +61,10 @@ int main(){
 
 		clock1=0;
 		clock2=0;
-//------------------sha-------------------------
-		/*for (m=0; m<data_length; m++)
-		{
-		    	if (current_seed1[m]!=255)
-		    	{
-		    		for (l=0; l<m; l++) current_seed1[l] = 0;
-		    		current_seed1[m]++;
-		    		break;
-		    	}
-	    	}*/
-//------------------sha ends------------------------
+		clock11=0;
 
-		//clock1 = cpucycles();
+	clock11 = cpucycles();
 
-//-------------------sha--------------------------
 
 //-------------------shake----------------------
 	keccak_squeezeblocks(byte_bank, nrounds, s, SHAKE128_RATE);
@@ -103,49 +75,6 @@ int main(){
 		byte_bank[nrounds*SHAKE128_RATE+j]=temp_byte[j];			
 	}
 
-//-------------------shake ends-----------------
-
-
-
-/*
-//--------------------0----------------------
-		SHA512_Update(&sha512, current_seed1, 1); //generate the random numbers
-		SHA512_Final(hash, &sha512);
-//--------------------1----------------------
-		SHA512_Update(&sha512, current_seed1+1, 1);
-		SHA512_Final(hash+64*1, &sha512);
-//--------------------2----------------------
-		SHA512_Update(&sha512, current_seed1+2, 1);
-		SHA512_Final(hash+64*2, &sha512);
-//--------------------3----------------------
-		SHA512_Update(&sha512, current_seed1+3, 1);
-		SHA512_Final(hash+64*3, &sha512);
-//--------------------4----------------------
-		SHA512_Update(&sha512, current_seed1+4, 1);
-		SHA512_Final(hash+64*4, &sha512);
-//--------------------5----------------------
-		SHA512_Update(&sha512, current_seed1+5, 1);
-		SHA512_Final(hash+64*5, &sha512);
-//--------------------6----------------------
-		SHA512_Update(&sha512, current_seed1+6, 1);
-		SHA512_Final(hash+64*6, &sha512);
-//--------------------7----------------------
-		SHA512_Update(&sha512, current_seed1+7, 1);
-		SHA512_Final(hash+64*7, &sha512);
-//--------------------8----------------------
-		SHA512_Update(&sha512, current_seed1+8, 1);
-		SHA512_Final(hash+64*8, &sha512);
-//--------------------9----------------------
-		SHA512_Update(&sha512, current_seed1+9, 1);
-		SHA512_Final(hash+64*9, &sha512);
-//--------------------10----------------------
-		SHA512_Update(&sha512, current_seed1+10, 1); 
-		SHA512_Final(hash+64*10, &sha512);
-//--------------------11----------------------
-		SHA512_Update(&sha512, current_seed1+11, 1);
-		SHA512_Final(hash+64*11, &sha512);
-*/
-//-------------------sha ends--------------------------
 		clock1 = cpucycles();
 
 //-----------------------------------------------------------------------------------------------------------
@@ -568,25 +497,6 @@ int main(){
 		control=control & bit[26];
 
 		//-------------27--------------
-/*
-		out[4] = (~disable_update & ((~bit[29]&~bit[28]) | (~bit[30]&~bit[28]))) | (disable_update & out[4]);
-
-		out[3] = (~disable_update & ((~bit[31]&~bit[30]&~bit[29]&bit[28]) | (bit[31]&bit[30]&bit[29]&~bit[28]) | (~bit[31]&bit[30]&bit[29]&~bit[28]))) | (disable_update & out[3]);
-
-		out[2] = (~disable_update & ((~bit[31]&bit[30]&bit[29]&~bit[28]) | (~bit[31]&bit[30]&~bit[29]) | (bit[31]&~bit[30]&~bit[29]) | (~bit[29]&~bit[28]))) | (disable_update & out[2]);
-
-		out[1] = (~disable_update & ((~bit[31]&~bit[30]&~bit[29]&bit[28]) | (bit[31]&bit[30]&bit[29]&~bit[28]) | (~bit[31]&bit[30]&bit[29]&~bit[28]) | (bit[31]&~bit[30]&~bit[29]) | (~bit[30]&~bit[28]))) | (disable_update & out[1]);
-
-		out[0] = (~disable_update & ((bit[31]&~bit[29]&bit[28]) | (bit[31]&bit[30]&bit[29]&~bit[28]) | (~bit[31]&~bit[30]&~bit[28]) | (~bit[31]&bit[30]&~bit[29]))) | (disable_update & out[0]);
-
-*/
-		//-------------28--------------
-
-		
-
-
-
-		//out[5] = (~disable_update & (---put espresso output---)) | (disable_update & out[5]);
 
 		out[5] = (~disable_update & ((~bit[32]&bit[31]&bit[30]&bit[29]&bit[28]) | (~bit[32]&~bit[31] &bit[30]&bit[29]&bit[28]) | (bit[32]&~bit[31]&bit[30]&bit[29]&bit[28]) | (bit[32]&bit[31]&~bit[30]&bit[29]&bit[28]) | (~bit[32]&bit[31]&~bit[30]&bit[29]&bit[28]))) | (disable_update & out[5]);
 
@@ -600,7 +510,7 @@ int main(){
 		disable_update= disable_update | (control & ~bit[27]);
 		control=control & bit[27];
 
-		//-------------28-1--------------
+		//-------------28--------------
 
 		out[5] = (~disable_update & ((~bit[33]&~bit[32]&bit[31]&bit[30]&bit[29]) | (bit[33]&~bit[32]&bit[31]&bit[30]&bit[29]) | (bit[32]&bit[31]&bit[30]&bit[29]))) | (disable_update & out[5]);
 		out[4] = (~disable_update & ((~bit[31]&~bit[29]) | (bit[31]&~bit[30]&~bit[29]))) | (disable_update & out[4]);
@@ -1319,18 +1229,7 @@ int main(){
 		control=control & bit[85];
 
 		//-------------86--------------
-/*
-		out[6] = (~disable_update & ()) | (disable_update & out[6]);		
-		out[5] = (~disable_update & ()) | (disable_update & out[5]);
-		out[4] = (~disable_update & ()) | (disable_update & out[4]);
-		out[3] = (~disable_update & ()) | (disable_update & out[3]);
-		out[2] = (~disable_update & ()) | (disable_update & out[2]);
-		out[1] = (~disable_update & ()) | (disable_update & out[1]);
-		out[0] = (~disable_update & ()) | (disable_update & out[0]);
 
-		disable_update= disable_update | (control & ~bit[45]);
-		control=control & bit[45];
-*/
 		out[6] = (~disable_update & ((~bit[91]&~bit[90]&~bit[89]&~bit[88]&~bit[87]))) | (disable_update & out[6]);		
 		out[5] = (~disable_update & ((~bit[91]&bit[90]&bit[88]&~bit[87]) | (bit[90]&~bit[88]&~bit[87]) | (~bit[90]&bit[88]&~bit[87]) | (bit[89]&~bit[87]) | (bit[91]&~bit[89]&~bit[87]))) | (disable_update & out[5]);
 		out[4] = (~disable_update & ((bit[91]&~bit[90]&~bit[89]&~bit[88]) | (bit[90]&~bit[88]&~bit[87]) | (~bit[89]&~bit[88]&bit[87]) | (~bit[91]&bit[89]&~bit[88]) | (~bit[90]&bit[89]&~bit[88]))) | (disable_update & out[4]);
@@ -1417,6 +1316,7 @@ int main(){
 		clock2 = cpucycles();
 
 		clock3=clock3+(clock2-clock1);
+		clock4=clock4+(clock2-clock11);
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -1426,21 +1326,20 @@ int main(){
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
 
-		//printf("%lld%lld%lld%lld%lld%lld%lld%lld \n",bit[7]&1,bit[6]&1,bit[5]&1,bit[4]&1,out[3]&1,out[2]&1,out[1]&1,out[0]&1);
-		printf("%ld %lld : %lld %lld %lld %lld %lld %lld\n",i,clock3,out[5]&1,out[4]&1,out[3]&1,out[2]&1,out[1]&1,out[0]&1);
 		for(k=0;k<64;k++){
 			hist[sample[k]]++;
 			printf("  %lld  ,",sample[k]);
 		}
-		printf("\n %ld %lld\n",i,clock3);
+		printf("\n iteration : %ld\n",i);
 
-		if(disable_update!=0xffffffffffffffff)//even if the sample is not found within depth 40
+		if(disable_update!=0xffffffffffffffff)//even if the sample is not found within depth 96
 			break;
 	}
 
-	printf("Time : %lld\n",clock3/repeat);
-	//printf("\nbit : %d\n",lsb);
+	printf("Time to generate 64 samples with 96-bit precision without random number generation: %lld\n",clock3/repeat);
+	printf("Time to generate 64 samples with 96-bit precision with random number generation: %lld\n",clock4/repeat);
 //---------------------------print the histogram------------------------------
+	printf("The Histogram is :\n");
 	for(i=0;i<84;i++)
 		printf(" %ld : %llu",i,hist[i]);
 //--------------------------print the histogram ends--------------------------
